@@ -2,6 +2,9 @@ require 'pry'
 
 class RouterModel
 
+  attr_accessor :stops, :valid
+  attr_reader :connections_to_strings
+
   @@routes = {
     redlineA: ["Alewife","Davis","Porter","Harvard","Central","Kendall/MIT","Charles/MGH","Park Street","Downtown Crossing","South Station", "Broadway", "Andrew", "JFK/UMASS", "Savin Hill","Fields Corner","Shawmut","Ashmont"],
     redlineB: ["Alewife","Davis","Porter","Harvard","Central","Kendall/MIT","Charles/MGH","Park Street","Downtown Crossing","South Station", "Broadway", "Andrew", "JFK/UMASS", "North Quincy", "Wollaston", "Quincy Center", "Quincy Adams","Braintree"],
@@ -28,17 +31,35 @@ class RouterModel
     }
   }
 
-  def initialize(string)
-   @stops = string.scan(/\b[\w\s\/]+/im)
+  # this should be returning an array = ["",""]
+  def initialize(stops:)
+   @stops = stops.scan(/\b[\w\s\/]+/im)
+   convert_to_proper
   end
 
-  def validate_stops
-    @stops.each { |stop|
-      @@routes.each_pair { |k,v|
+  def convert_to_proper
+    origin = @stops[0].scan(/\b[a-z][\w\s\/]+/i)[0].split.map(&:capitalize)*' '
+    destination = @stops[1].scan(/\b[a-z][\w\s\/]+/i)[0].split.map(&:capitalize)*' '
+    origin.sub!(/[\/]+[A-Za-z]+/){ $&.upcase }
+    destination.sub!(/([\/])\w+/){ $&.upcase }
+    origin.sub!(/(?: *town)/i, "town")
+    destination.sub!(/(?: *town)/i, "town")
+    @stops.replace([origin,destination])
+    validate_stops(origin, destination)
+  end
 
-      }
+  def validate_stops(origin, destination)
+    origin_valid = false
+    destination_valid = false
+    @@routes.each_pair { |k,v|
+      if v.include?(@stops[0])
+        origin_valid = true
+      elsif v.include?(@stops[1])
+        destination_valid = true
+      end
     }
+    @valid = origin_valid && destination_valid
   end
+
 
 end
-
