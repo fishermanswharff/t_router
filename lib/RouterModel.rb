@@ -52,11 +52,8 @@ class RouterModel
     origin_valid = false
     destination_valid = false
     @@routes.each_pair { |k,v|
-      if v.include?(@stops[0])
-        origin_valid = true
-      elsif v.include?(@stops[1])
-        destination_valid = true
-      end
+      v.include?(@stops[0]) ? origin_valid = true : next
+      v.include?(@stops[1]) ? destination_valid = true : next
     }
     @valid = origin_valid && destination_valid
   end
